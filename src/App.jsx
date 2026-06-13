@@ -539,6 +539,10 @@ export default function App() {
   const [newDate, setNewDate] = useState(new Date().toISOString().slice(0, 10));
   const [srcErr, setSrcErr] = useState("");
   const [srcBusy, setSrcBusy] = useState(false);
+  const [submitMsg, setSubmitMsg] = useState("");      // feedback after a public submit
+  const [submitErr, setSubmitErr] = useState("");
+  const [pending, setPending] = useState([]);          // admin moderation queue
+  const [pendingLoading, setPendingLoading] = useState(false);
 
   const addSourceDb = async () => {
     setSrcErr("");
@@ -568,6 +572,52 @@ export default function App() {
       await loadSources();
     } catch {}
   };
+
+  // Logged-in (non-admin) users submit a source for review.
+  const submitSourceDb = async () => {
+    setSubmitErr(""); setSubmitMsg("");
+    if (!newUrl.trim()) { setSubmitErr("Please enter a URL."); return; }
+    setSrcBusy(true);
+    try {
+      const r = await fetch("/api/sources/submit", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ title: newTitle.trim() || newUrl.trim(), url: newUrl.trim(), source_date: newDate }),
+      });
+      const d = await r.json();
+      if (d.ok) { setNewTitle(""); setNewUrl(""); setSubmitMsg(d.message || "Submitted for review. Thank you!"); }
+      else if (d.error === "duplicate") setSubmitErr(d.message || "That source was already submitted.");
+      else if (d.error === "invalid_url") setSubmitErr("That URL doesn't look right.");
+      else if (d.error === "login_required") setSubmitErr("Please log in to submit a source.");
+      else setSubmitErr("Couldn't submit. Please try again.");
+    } catch { setSubmitErr("Couldn't reach the server."); }
+    finally { setSrcBusy(false); }
+  };
+
+  // Admin: load the pending moderation queue.
+  const loadPending = async () => {
+    setPendingLoading(true);
+    try {
+      const r = await fetch("/api/sources/pending");
+      const d = await r.json();
+      setPending(d.pending || []);
+    } catch { setPending([]); }
+    finally { setPendingLoading(false); }
+  };
+
+  // Admin: approve or reject a pending source.
+  const moderateSource = async (id, action) => {
+    try {
+      await fetch("/api/sources/moderate", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id, action }),
+      });
+      await loadPending();
+      if (action === "approve") await loadSources();
+    } catch {}
+  };
+
+  // When admin opens the Sources drawer, load the pending queue too.
+  useEffect(() => { if (kbOpen && isAdmin) loadPending(); }, [kbOpen, isAdmin]);
 
   const reportGap = async (idx) => {
     const turn = turns[idx]; if (!turn || turn.reported) return;
@@ -669,6 +719,55 @@ export default function App() {
                   {srcErr && <div className="idk-auth-err" style={{ marginTop: 8 }}>{srcErr}</div>}
                   <button className="idk-addbtn" onClick={addSourceDb} disabled={srcBusy} style={{ marginTop: 10 }}><Plus size={15} /> {srcBusy ? "Adding…" : "Add source"}</button>
                 </div>
+              )}
+
+              {/* Admin: pending moderation queue */}
+              {isAdmin && (
+                <div style={{ margin: "6px 0 14px" }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, margin: "10px 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#e0a83d", display: "inline-block" }} />
+                    Pending review {pending.length > 0 && <span style={{ color: "var(--muted)", fontWeight: 500 }}>({pending.length})</span>}
+                  </div>
+                  {pendingLoading
+                    ? <div className="idk-hint">Loading…</div>
+                    : pending.length === 0
+                      ? <div className="idk-hint" style={{ margin: 0 }}>Nothing waiting for review.</div>
+                      : pending.map(pp => (
+                          <div className="idk-doc" key={pp.id} style={{ borderLeft: "3px solid #e0a83d" }}>
+                            <div className="idk-doc-top">
+                              <div style={{ fontWeight: 600, fontSize: 14 }}>{pp.title}</div>
+                              <div className="idk-hint" style={{ margin: 0 }}>{pp.source_date}</div>
+                            </div>
+                            <div className="url-row"><LinkIcon size={13} /><a href={pp.url} target="_blank" rel="noreferrer" style={{ color: "var(--high)", fontSize: 13, wordBreak: "break-all" }}>{pp.url}</a></div>
+                            {pp.submitted_by && <div className="idk-hint" style={{ margin: "2px 0 0" }}>submitted by {pp.submitted_by}</div>}
+                            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                              <button className="idk-addbtn" style={{ flex: 1, background: "var(--high)", color: "#fff", margin: 0 }} onClick={() => moderateSource(pp.id, "approve")}>Approve</button>
+                              <button className="idk-doc-del" style={{ flex: 1, justifyContent: "center", margin: 0 }} onClick={() => moderateSource(pp.id, "reject")}>Reject</button>
+                            </div>
+                          </div>
+                        ))}
+                  <div style={{ height: 1, background: "var(--line)", margin: "14px 0" }} />
+                </div>
+              )}
+
+              {/* Logged-in non-admin: submit a source for review */}
+              {user && !isAdmin && (
+                <div className="idk-doc" style={{ background: "var(--high-soft)" }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Suggest a source</div>
+                  <div className="idk-doc-top">
+                    <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Source title" />
+                    <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} />
+                  </div>
+                  <div className="url-row"><LinkIcon size={13} /><input type="text" value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://… (a specific page)" /></div>
+                  {submitErr && <div className="idk-auth-err" style={{ marginTop: 8 }}>{submitErr}</div>}
+                  {submitMsg && <div className="idk-auth-note" style={{ marginTop: 8 }}>{submitMsg}</div>}
+                  <button className="idk-addbtn" onClick={submitSourceDb} disabled={srcBusy} style={{ marginTop: 10 }}><Plus size={15} /> {srcBusy ? "Submitting…" : "Submit for review"}</button>
+                </div>
+              )}
+
+              {/* Logged-out visitors: gentle nudge to contribute */}
+              {!user && (
+                <div className="idk-hint" style={{ margin: "0 0 12px" }}>Log in to suggest a source for the library.</div>
               )}
 
               {sourcesLoading
