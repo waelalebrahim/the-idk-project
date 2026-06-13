@@ -293,7 +293,8 @@ const timeAgo = (ts) => { const s = Math.floor((Date.now() - ts) / 1000); if (s 
 
 function AnswerCard({ turn, idx, onReportGap, onFlag }) {
   const t = TIER[turn.confidence] || TIER.low;
-  const srcDocs = (turn.sources || []).map(id => turn.docsAtAsk.find(d => d.id === id)).filter(Boolean);
+  const docsAtAsk = turn.docsAtAsk || [];
+  const srcDocs = (turn.sources || []).map(id => docsAtAsk.find(d => d.id === id)).filter(Boolean);
   const isLow = turn.confidence === "low";
   return (
     <div className="idk-card" style={{ "--tier": t.color }}>
@@ -473,7 +474,18 @@ export default function App() {
   const [commLoading, setCommLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [convoId, setConvoId] = useState(null);       // current saved conversation id
+  const [history, setHistory] = useState([]);         // user's past conversations
+  const [histOpen, setHistOpen] = useState(false);    // history sidebar open
+  const [histLoading, setHistLoading] = useState(false);
   const convRef = useRef(null);
+  const safeParse = (x) => { try { return JSON.parse(x); } catch { return {}; } };
+  const turnsRef = useRef([]);
+  useEffect(() => { turnsRef.current = turns; }, [turns]);
+  const userRef = useRef(null);
+  useEffect(() => { userRef.current = user; }, [user]);
+  const convoIdRef = useRef(null);
+  useEffect(() => { convoIdRef.current = convoId; }, [convoId]);
 
   // On load, ask the server if we already have a session.
   useEffect(() => {
@@ -486,6 +498,96 @@ export default function App() {
   const doLogout = async () => {
     try { await fetch("/api/auth/logout", { method: "POST" }); } catch {}
     setUser(null);
+    setHistory([]); setConvoId(null); setTurns([]); setHistOpen(false);
+  };
+
+  // Load the logged-in user's conversation history (for the sidebar).
+  const loadHistory = async () => {
+    setHistLoading(true);
+    try {
+      const r = await fetch("/api/conversations/list");
+      const d = await r.json();
+      setHistory(d.conversations || []);
+    } catch { setHistory([]); }
+    finally { setHistLoading(false); }
+  };
+  useEffect(() => { if (user) loadHistory(); }, [user]);
+
+  // Persist the current conversation (only when logged in). Builds a flat message
+  // list from turns: each q -> user msg, each a -> assistant msg (+ citations).
+  const persistConversation = async (currentTurns, idOverride) => {
+    const currentUser = userRef.current;
+    if (!currentUser) return; // anonymous = nothing saved
+    const msgs = [];
+    for (const t of currentTurns) {
+      if (t.role === "q") msgs.push({ role: "user", content: t.text });
+      else if (t.role === "a") {
+        // Resolve the source chips (title/url/date) so history looks identical to live.
+        const docsAtAsk = t.docsAtAsk || [];
+        const chips = (t.sources || [])
+          .map(id => docsAtAsk.find(d => d.id === id))
+          .filter(Boolean)
+          .map(d => ({ id: d.id, title: d.title, url: d.url, date: d.date }));
+        const meta = { confidence: t.confidence || "low", chips,
+                       conflict: !!t.conflict, conflict_note: t.conflict_note || "" };
+        msgs.push({ role: "assistant", content: t.answer || "", citations: meta });
+      }
+    }
+    if (msgs.length === 0) return;
+    const firstQ = currentTurns.find(t => t.role === "q");
+    const title = firstQ ? firstQ.text.slice(0, 60) : "Untitled";
+    try {
+      const r = await fetch("/api/conversations/save", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: idOverride ?? convoIdRef.current, title, messages: msgs }),
+      });
+      const d = await r.json();
+      if (d.ok && d.id) { if (!convoIdRef.current) setConvoId(d.id); loadHistory(); }
+    } catch {}
+  };
+
+  // Open a past conversation: load its messages and rebuild the turns view.
+  const openConversation = async (id) => {
+    try {
+      const r = await fetch("/api/conversations/get", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const d = await r.json();
+      if (d.messages) {
+        const rebuilt = [];
+        for (const m of d.messages) {
+          if (m.role === "user") { rebuilt.push({ role: "q", text: m.content }); continue; }
+          const meta = m.citations ? safeParse(m.citations) : {};
+          const chips = Array.isArray(meta.chips) ? meta.chips : [];
+          rebuilt.push({
+            role: "a",
+            answer: m.content,
+            confidence: meta.confidence || "low",
+            sources: chips.map(c => c.id),
+            docsAtAsk: chips,                       // so AnswerCard can render chips
+            conflict: !!meta.conflict,
+            conflict_note: meta.conflict_note || "",
+            question: "",
+          });
+        }
+        setTurns(rebuilt); setConvoId(id); setHistOpen(false);
+      }
+    } catch {}
+  };
+
+  // Start a fresh conversation.
+  const newConversation = () => { setTurns([]); setConvoId(null); setHistOpen(false); };
+
+  const deleteConversation = async (id) => {
+    try {
+      await fetch("/api/conversations/delete", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (id === convoId) newConversation();
+      loadHistory();
+    } catch {}
   };
 
   // Load the curated source library from the database.
@@ -517,16 +619,22 @@ export default function App() {
     const q = (text ?? input).trim();
     if (!q || busy) return;
     setInput(""); if (taRef.current) taRef.current.style.height = "auto";
-    setTurns(prev => [...prev, { role: "q", text: q }]);
+    // Snapshot the turns BEFORE this exchange, then build forward deterministically.
+    const base = turnsRef.current || [];
+    const withQ = [...base, { role: "q", text: q }];
+    setTurns(withQ);
     setBusy(true);
     try {
-      // Live-fetch every source, then answer from what came back.
       const fetched = await Promise.all(sources.map(fetchSource));
       const docs = fetched.filter(Boolean);
       const r = await askEngine(q, docs);
-      setTurns(prev => [...prev, { role: "a", ...r, docsAtAsk: docs, question: q }]);
+      const withA = [...withQ, { role: "a", ...r, docsAtAsk: docs, question: q }];
+      setTurns(withA);
+      persistConversation(withA);
     } catch {
-      setTurns(prev => [...prev, { role: "a", ...declineResult(), docsAtAsk: [], question: q }]);
+      const withA = [...withQ, { role: "a", ...declineResult(), docsAtAsk: [], question: q }];
+      setTurns(withA);
+      persistConversation(withA);
     } finally { setBusy(false); }
   };
 
@@ -644,7 +752,7 @@ export default function App() {
     <div className="idk-root">
       <style>{STYLE}</style>
       <header className="idk-head">
-        <div className="idk-brand">
+        <div className="idk-brand" onClick={newConversation} style={{ cursor: "pointer" }} title="New conversation">
           <svg className="idk-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-label="The I Don't Know Project logo">
             <path d="M10 3 L30 3 A7 7 0 0 1 37 10 L37 30 A7 7 0 0 1 30 37 L24 37 M16 37 L10 37 A7 7 0 0 1 3 30 L3 10 A7 7 0 0 1 10 3" fill="none" stroke="#1a2230" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
             <path d="M20 10 V22 M20 27 V30" stroke="#0e7c66" strokeWidth="4" strokeLinecap="round" />
@@ -659,6 +767,7 @@ export default function App() {
           {user
             ? <button className="idk-kbbtn" onClick={doLogout} title={"Logged in as " + user.username}><UserIcon size={15} /> <span className="lbl">{user.username}</span> · Log out</button>
             : <button className="idk-kbbtn" onClick={() => setAuthOpen(true)}><UserIcon size={15} /> Log in</button>}
+          {user && <button className="idk-kbbtn" onClick={() => { setHistOpen(true); loadHistory(); }}><BookOpen size={15} /> History{history.length ? ` · ${history.length}` : ""}</button>}
           <button className="idk-kbbtn" onClick={() => setCommOpen(true)}><Users size={15} /> Community{board.length ? ` · ${board.length}` : ""}</button>
           <button className="idk-kbbtn" onClick={() => setKbOpen(true)}><BookOpen size={15} /> Sources · {sources.length}</button>
         </div>
@@ -699,6 +808,34 @@ export default function App() {
 
       {commOpen && <CommunityDrawer onClose={() => setCommOpen(false)} board={board} voted={voted} loading={commLoading} onUpvote={upvote} />}
       {authOpen && <AuthDrawer onClose={() => setAuthOpen(false)} onAuthed={(u) => { setUser(u); setAuthOpen(false); }} />}
+
+      {histOpen && (
+        <>
+          <div className="idk-scrim" onClick={() => setHistOpen(false)} />
+          <div className="idk-auth" role="dialog" aria-modal="true">
+            <div className="idk-auth-head">
+              <h3>Your conversations</h3>
+              <button className="idk-iconbtn" onClick={() => setHistOpen(false)} aria-label="Close"><X size={18} /></button>
+            </div>
+            <div className="idk-auth-body">
+              <button className="idk-addbtn" onClick={newConversation} style={{ marginBottom: 14 }}><Plus size={15} /> New conversation</button>
+              {histLoading
+                ? <div className="idk-hint">Loading…</div>
+                : history.length === 0
+                  ? <div className="idk-hint" style={{ margin: 0 }}>No saved conversations yet. Ask something while logged in and it'll be saved here.</div>
+                  : history.map(h => (
+                      <div className="idk-doc" key={h.id} style={{ cursor: "pointer", background: h.id === convoId ? "var(--high-soft)" : undefined }}>
+                        <div onClick={() => openConversation(h.id)}>
+                          <div style={{ fontWeight: 600, fontSize: 14 }}>{h.title || "Untitled"}</div>
+                        </div>
+                        <button className="idk-doc-del" onClick={() => deleteConversation(h.id)}><Trash2 size={13} /> Delete</button>
+                      </div>
+                    ))}
+              <div className="idk-hint" style={{ margin: "4px 0 0" }}><ShieldCheck size={12} /> Only you can see your conversations. Logged out = nothing saved.</div>
+            </div>
+          </div>
+        </>
+      )}
 
       {kbOpen && (
         <>
