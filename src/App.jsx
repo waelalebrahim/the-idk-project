@@ -135,6 +135,19 @@ const STYLE = `
 .idk-auth-submit:disabled{opacity:.6;cursor:default;}
 .idk-auth-switch{margin-top:16px;font-size:13px;color:var(--muted);text-align:center;}
 .idk-auth-switch button{background:none;border:none;color:var(--high);font-size:13px;font-weight:600;cursor:pointer;padding:0;font-family:inherit;}
+
+.idk-log{position:fixed;inset:0;background:var(--paper);z-index:60;overflow-y:auto;}
+.idk-log-inner{max-width:720px;margin:0 auto;padding:40px 24px 80px;}
+.idk-log-head{margin-bottom:24px;}
+.idk-log-title{font-family:'Space Grotesk',sans-serif;font-size:32px;margin:0 0 6px;color:var(--ink);}
+.idk-log-sub{color:var(--muted);font-size:15px;margin:0 0 32px;line-height:1.5;}
+.idk-log-list{display:flex;flex-direction:column;gap:18px;}
+.idk-log-item{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start;}
+.idk-log-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);padding-top:14px;}
+.idk-log-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+.idk-log-h{font-weight:600;font-size:15px;color:var(--ink);}
+.idk-log-b{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5;white-space:pre-wrap;}
+@media(max-width:560px){.idk-log-item{grid-template-columns:1fr;gap:4px;}.idk-log-date{padding-top:0;}}
 `;
 
 // Starter sources — REPLACE with links you own or are allowed to use.
@@ -478,8 +491,25 @@ export default function App() {
   const [history, setHistory] = useState([]);         // user's past conversations
   const [histOpen, setHistOpen] = useState(false);    // history sidebar open
   const [histLoading, setHistLoading] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);       // changelog full-page view
+  const [logEntries, setLogEntries] = useState([]);
+  const [logLoading, setLogLoading] = useState(false);
   const convRef = useRef(null);
   const safeParse = (x) => { try { return JSON.parse(x); } catch { return {}; } };
+  const openChangelog = async () => {
+    setLogOpen(true); setLogLoading(true);
+    try {
+      const r = await fetch("/api/changelog");
+      const d = await r.json();
+      setLogEntries(d.entries || []);
+    } catch { setLogEntries([]); }
+    finally { setLogLoading(false); }
+  };
+  const fmtDate = (iso) => {
+    if (!iso) return "";
+    try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }); }
+    catch { return ""; }
+  };
   const turnsRef = useRef([]);
   useEffect(() => { turnsRef.current = turns; }, [turns]);
   const userRef = useRef(null);
@@ -795,7 +825,8 @@ export default function App() {
         <div className="idk-legal">
           <a href="/privacy.html">Privacy</a><span>·</span>
           <a href="/terms.html">Terms</a><span>·</span>
-          <a href="/disclaimer.html">Disclaimer</a>
+          <a href="/disclaimer.html">Disclaimer</a><span>·</span>
+          <a onClick={openChangelog} style={{ cursor: "pointer" }}>What&rsquo;s new</a>
         </div>
         <div className="idk-social">
           <a href={X_URL} target="_blank" rel="noreferrer" aria-label="X">
@@ -808,6 +839,36 @@ export default function App() {
 
       {commOpen && <CommunityDrawer onClose={() => setCommOpen(false)} board={board} voted={voted} loading={commLoading} onUpvote={upvote} />}
       {authOpen && <AuthDrawer onClose={() => setAuthOpen(false)} onAuthed={(u) => { setUser(u); setAuthOpen(false); }} />}
+
+      {logOpen && (
+        <div className="idk-log">
+          <div className="idk-log-inner">
+            <div className="idk-log-head">
+              <button className="idk-kbbtn" onClick={() => setLogOpen(false)}><CornerDownLeft size={15} /> Back</button>
+            </div>
+            <h2 className="idk-log-title">What&rsquo;s new</h2>
+            <p className="idk-log-sub">Every change we ship, pulled live from our public code history. Built in the open.</p>
+            {logLoading
+              ? <div className="idk-hint">Loading…</div>
+              : logEntries.length === 0
+                ? <div className="idk-hint">Couldn&rsquo;t load updates right now. Please try again later.</div>
+                : <div className="idk-log-list">
+                    {logEntries.map((e, i) => (
+                      <div className="idk-log-item" key={e.sha || i}>
+                        <div className="idk-log-date">{fmtDate(e.date)}</div>
+                        <div className="idk-log-card">
+                          <div className="idk-log-h">{e.title}</div>
+                          {e.body && <div className="idk-log-b">{e.body}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>}
+            <div className="idk-legal" style={{ marginTop: 30 }}>
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer">See the full code on GitHub</a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {histOpen && (
         <>
