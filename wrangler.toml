@@ -1,0 +1,11 @@
+name = "i-dont-know-project"
+compatibility_date = "2026-06-12"
+pages_build_output_dir = "dist"
+
+[vars]
+ADMIN_USERNAME = "waelalebrahim"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "idk-db"
+database_id = "44701f90-9abb-4d7f-8cca-aa06acfe41f1"
