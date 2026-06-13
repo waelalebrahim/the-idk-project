@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, BookOpen, Plus, Trash2, X, CornerDownLeft, ShieldCheck, Github, Users, Flag, ArrowUp, Link as LinkIcon, Linkedin, User as UserIcon } from "lucide-react";
+import { Send, BookOpen, Plus, Trash2, X, CornerDownLeft, ShieldCheck, Github, Users, Flag, ArrowUp, Link as LinkIcon, Linkedin, User as UserIcon, Menu } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The I Don't Know Project — deploy build (live link-sourcing)
@@ -148,6 +148,29 @@ const STYLE = `
 .idk-log-h{font-weight:600;font-size:15px;color:var(--ink);}
 .idk-log-b{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5;white-space:pre-wrap;}
 @media(max-width:560px){.idk-log-item{grid-template-columns:1fr;gap:4px;}.idk-log-date{padding-top:0;}}
+
+.idk-burger{display:none;background:none;border:none;color:var(--ink);cursor:pointer;padding:6px;flex-shrink:0;}
+.idk-menu{position:fixed;top:0;right:0;height:100%;width:300px;max-width:85vw;background:var(--surface);border-left:1px solid var(--line);z-index:50;display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(20,30,50,.14);animation:idkslide .18s ease;}
+@keyframes idkslide{from{transform:translateX(100%);}to{transform:translateX(0);}}
+.idk-menu-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line);font-family:'Space Grotesk',sans-serif;font-weight:700;}
+.idk-menu-body{padding:12px;display:flex;flex-direction:column;gap:4px;}
+.idk-menu-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:none;font-family:inherit;font-size:15px;color:var(--ink);padding:14px 12px;border-radius:10px;cursor:pointer;text-decoration:none;}
+.idk-menu-item:hover{background:var(--paper);}
+@media (max-width:760px){
+  .idk-nav-group{display:none;}
+  .idk-burger{display:block;}
+  .idk-lock h1{font-size:15px;white-space:nowrap;}
+  .idk-head{padding:14px 16px;}
+}
+
+.idk-menu-div{height:1px;background:var(--line);margin:8px 4px;}
+.idk-menu-link{display:block;padding:11px 12px;border-radius:10px;font-size:14px;color:var(--muted);text-decoration:none;font-family:'IBM Plex Mono',monospace;}
+.idk-menu-link:hover{background:var(--paper);color:var(--ink);}
+.idk-menu-social{display:flex;gap:20px;padding:14px 12px 4px;}
+.idk-menu-social a{color:var(--muted);display:inline-flex;transition:color .15s;}
+.idk-menu-social a:hover{color:var(--ink);}
+
+@media (max-width:760px){ .idk-legal, .idk-social{display:none;} }
 `;
 
 // Starter sources — REPLACE with links you own or are allowed to use.
@@ -494,6 +517,7 @@ export default function App() {
   const [logOpen, setLogOpen] = useState(false);       // changelog full-page view
   const [logEntries, setLogEntries] = useState([]);
   const [logLoading, setLogLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // mobile nav panel
   const convRef = useRef(null);
   const safeParse = (x) => { try { return JSON.parse(x); } catch { return {}; } };
   const openChangelog = async () => {
@@ -792,8 +816,8 @@ export default function App() {
             <span>The AI that says &ldquo;I don&rsquo;t know&rdquo;</span>
           </div>
         </div>
+        <button className="idk-burger" onClick={() => setMenuOpen(true)} aria-label="Menu"><Menu size={22} /></button>
         <div className="idk-nav-group">
-          <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="idk-github-btn"><Github size={14} /> <span className="lbl">Contribute on GitHub</span></a>
           {user
             ? <button className="idk-kbbtn" onClick={doLogout} title={"Logged in as " + user.username}><UserIcon size={15} /> <span className="lbl">{user.username}</span> · Log out</button>
             : <button className="idk-kbbtn" onClick={() => setAuthOpen(true)}><UserIcon size={15} /> Log in</button>}
@@ -802,6 +826,37 @@ export default function App() {
           <button className="idk-kbbtn" onClick={() => setKbOpen(true)}><BookOpen size={15} /> Sources · {sources.length}</button>
         </div>
       </header>
+
+      {menuOpen && (
+        <>
+          <div className="idk-scrim" onClick={() => setMenuOpen(false)} />
+          <div className="idk-menu" role="dialog" aria-modal="true">
+            <div className="idk-menu-head">
+              <span>Menu</span>
+              <button className="idk-iconbtn" onClick={() => setMenuOpen(false)} aria-label="Close"><X size={18} /></button>
+            </div>
+            <div className="idk-menu-body">
+              {user
+                ? <button className="idk-menu-item" onClick={() => { doLogout(); setMenuOpen(false); }}><UserIcon size={17} /> <span>{user.username} · Log out</span></button>
+                : <button className="idk-menu-item" onClick={() => { setAuthOpen(true); setMenuOpen(false); }}><UserIcon size={17} /> <span>Log in</span></button>}
+              {user && <button className="idk-menu-item" onClick={() => { setHistOpen(true); loadHistory(); setMenuOpen(false); }}><BookOpen size={17} /> <span>History{history.length ? ` · ${history.length}` : ""}</span></button>}
+              <button className="idk-menu-item" onClick={() => { setCommOpen(true); setMenuOpen(false); }}><Users size={17} /> <span>Community{board.length ? ` · ${board.length}` : ""}</span></button>
+              <button className="idk-menu-item" onClick={() => { setKbOpen(true); setMenuOpen(false); }}><BookOpen size={17} /> <span>Sources · {sources.length}</span></button>
+              <div className="idk-menu-div" />
+              <a className="idk-menu-link" href="/privacy.html" onClick={() => setMenuOpen(false)}>Privacy</a>
+              <a className="idk-menu-link" href="/terms.html" onClick={() => setMenuOpen(false)}>Terms</a>
+              <a className="idk-menu-link" href="/disclaimer.html" onClick={() => setMenuOpen(false)}>Disclaimer</a>
+              <a className="idk-menu-link" onClick={() => { openChangelog(); setMenuOpen(false); }} style={{ cursor: "pointer" }}>What&rsquo;s new</a>
+              <div className="idk-menu-div" />
+              <div className="idk-menu-social">
+                <a href={X_URL} target="_blank" rel="noreferrer" aria-label="X"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+                <a href={LINKEDIN_URL} target="_blank" rel="noreferrer" aria-label="LinkedIn"><Linkedin size={17} /></a>
+                <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={17} /></a>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="idk-conv" ref={convRef}>
         {turns.length === 0 && (
@@ -833,7 +888,7 @@ export default function App() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           </a>
           <a href={LINKEDIN_URL} target="_blank" rel="noreferrer" aria-label="LinkedIn"><Linkedin size={15} /></a>
-          <a href={GITHUB_PROFILE} target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={15} /></a>
+          <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={15} /></a>
         </div>
       </div>
 
