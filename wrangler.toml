@@ -4,7 +4,7 @@ pages_build_output_dir = "dist"
 
 [vars]
 ADMIN_USERNAME = "waelalebrahim"
-
+COMMUNITY_LIVE = "off"
 [[d1_databases]]
 binding = "DB"
 database_name = "idk-db"

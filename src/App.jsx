@@ -179,6 +179,101 @@ const STYLE = `
 .idk-share-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px;}
 .idk-share-opt{display:flex;align-items:center;justify-content:center;text-align:center;padding:13px 10px;border-radius:10px;background:var(--paper);border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);text-decoration:none;cursor:pointer;transition:border-color .15s,background .15s;}
 .idk-share-opt:hover{border-color:var(--ink);background:var(--surface);}
+
+
+
+/* ===== Community forum (rich) ===== */
+.idk-forumx{position:fixed;inset:0;background:var(--paper);z-index:60;overflow-y:auto;display:flex;flex-direction:column;}
+.idk-fx-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 28px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:5;}
+.idk-fx-top .idk-kbbtn{border:1px solid var(--line);background:var(--paper);}
+.idk-fx-flag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--med);background:var(--med-soft);padding:5px 11px;border-radius:20px;}
+.idk-fx-shell{display:grid;grid-template-columns:240px 1fr;gap:0;flex:1;max-width:1180px;width:100%;margin:0 auto;}
+/* sidebar */
+.idk-fx-side{border-right:1px solid var(--line);padding:28px 18px;position:sticky;top:57px;align-self:start;height:calc(100vh - 57px);overflow-y:auto;}
+.idk-fx-brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--ink);margin-bottom:26px;}
+.idk-fx-navsec{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px;padding:0 10px;}
+.idk-fx-nav{display:flex;flex-direction:column;gap:2px;}
+.idk-fx-link{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;font-family:inherit;font-size:14px;color:var(--ink);padding:9px 10px;border-radius:8px;cursor:pointer;text-decoration:none;transition:background .12s;}
+.idk-fx-link:hover{background:var(--paper);}
+.idk-fx-link.on{background:var(--high-soft);color:var(--high);font-weight:600;}
+.idk-fx-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+/* main */
+.idk-fx-main{padding:30px 34px 80px;min-width:0;}
+.idk-fx-hero{margin-bottom:26px;}
+.idk-fx-hero h1{font-family:'Space Grotesk',sans-serif;font-size:30px;letter-spacing:-.02em;color:var(--ink);margin:0 0 8px;}
+.idk-fx-hero p{color:var(--muted);font-size:15px;line-height:1.55;max-width:60ch;margin:0;}
+/* category cards */
+.idk-fx-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:34px;}
+.idk-fx-card{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px 16px 16px 20px;cursor:pointer;overflow:hidden;transition:border-color .15s,transform .15s;}
+.idk-fx-card:hover{border-color:var(--ink);transform:translateY(-2px);}
+.idk-fx-cardbar{position:absolute;left:0;top:0;bottom:0;width:5px;}
+.idk-fx-cardname{display:block;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;color:var(--ink);margin-bottom:5px;}
+.idk-fx-cardblurb{display:block;font-size:12.5px;color:var(--muted);line-height:1.45;}
+/* list header */
+.idk-fx-listhead{display:grid;grid-template-columns:1fr 72px 72px 92px;gap:10px;padding:0 16px 10px;border-bottom:2px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+.idk-fx-lh-col{text-align:center;}
+.idk-fx-lh-topic{font-weight:600;}
+/* rows */
+.idk-fx-rows{display:flex;flex-direction:column;}
+.idk-fx-row{display:grid;grid-template-columns:1fr 72px 72px 92px;gap:10px;align-items:center;padding:16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s;}
+.idk-fx-row:hover{background:var(--surface);}
+.idk-fx-rowmain{min-width:0;}
+.idk-fx-rowtitle{font-weight:600;font-size:15.5px;color:var(--ink);margin-bottom:7px;line-height:1.35;}
+.idk-fx-pin,.idk-fx-lock{margin-right:5px;font-size:13px;}
+.idk-fx-rowpills{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.idk-fx-pill{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 9px;border:1px solid;border-radius:20px;background:var(--surface);}
+.idk-fx-rowauthor{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.idk-fx-stat{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink);}
+.idk-fx-act{color:var(--muted);font-size:12.5px;}
+.idk-fx-empty{padding:40px 16px;color:var(--muted);font-size:14px;text-align:center;}
+/* avatars + roles */
+.idk-ava{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;flex-shrink:0;line-height:1;}
+.idk-role{display:inline-flex;align-items:center;gap:3px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2px 7px;border-radius:20px;}
+.idk-role-admin{background:var(--high-soft);color:var(--high);}
+.idk-role-mod{background:#eef1fb;color:#3b5bdb;}
+/* thread */
+.idk-fx-thread{max-width:760px;}
+.idk-fx-back{display:inline-flex;align-items:center;gap:6px;background:none;border:none;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);cursor:pointer;padding:0;margin-bottom:16px;}
+.idk-fx-back:hover{color:var(--ink);}
+.idk-fx-threadpills{margin-bottom:10px;}
+.idk-fx-threadtitle{font-family:'Space Grotesk',sans-serif;font-size:27px;letter-spacing:-.02em;color:var(--ink);margin:0 0 22px;line-height:1.25;}
+.idk-fx-post{display:flex;gap:14px;padding:18px 0;border-top:1px solid var(--line);}
+.idk-fx-replypost{padding-left:8px;}
+.idk-fx-postbody{flex:1;min-width:0;}
+.idk-fx-posthead{display:flex;align-items:center;gap:10px;margin-bottom:7px;flex-wrap:wrap;}
+.idk-fx-postauthor{font-weight:600;font-size:14.5px;color:var(--ink);}
+.idk-fx-postdate{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
+.idk-fx-posttext{font-size:15.5px;line-height:1.7;color:var(--ink);white-space:pre-wrap;}
+.idk-fx-replyhead{font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:26px 0 4px;}
+/* mobile */
+@media (max-width:820px){
+  .idk-fx-shell{grid-template-columns:1fr;}
+  .idk-fx-side{display:none;}
+  .idk-fx-main{padding:22px 16px 80px;}
+  .idk-fx-listhead{grid-template-columns:1fr 48px 56px;}
+  .idk-fx-listhead .idk-fx-lh-col:nth-child(3){display:none;}
+  .idk-fx-row{grid-template-columns:1fr 48px 56px;}
+  .idk-fx-row .idk-fx-stat:nth-child(3){display:none;}
+  .idk-fx-hero h1{font-size:25px;}
+}
+
+/* category header (filtered view) */
+.idk-fx-cathead{display:flex;gap:14px;align-items:stretch;margin-bottom:22px;}
+.idk-fx-cathead-bar{width:5px;border-radius:3px;flex-shrink:0;}
+.idk-fx-cathead-name{font-family:'Space Grotesk',sans-serif;font-size:21px;color:var(--ink);margin:0 0 3px;}
+.idk-fx-cathead-blurb{font-size:13px;color:var(--muted);margin:0;font-family:'IBM Plex Mono',monospace;}
+/* thread layout with right meta panel */
+.idk-fx-threadgrid{display:grid;grid-template-columns:1fr 220px;gap:34px;align-items:start;}
+.idk-fx-threadcol{min-width:0;}
+.idk-fx-meta{position:sticky;top:80px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:18px;}
+.idk-fx-meta-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+.idk-fx-meta-row:last-child{border-bottom:none;}
+.idk-fx-meta-row span{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
+.idk-fx-meta-row b{color:var(--ink);font-weight:600;text-align:right;max-width:60%;}
+@media (max-width:820px){
+  .idk-fx-threadgrid{grid-template-columns:1fr;gap:0;}
+  .idk-fx-meta{display:none;}
+}
 `;
 
 // Starter sources — REPLACE with links you own or are allowed to use.
@@ -546,6 +641,251 @@ function ShareMenu({ url, text, onClose, onCopy, copied }) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Community forum — Cloudflare-class anatomy in The I Don't Know Project's calm
+// teal/ink identity. Sidebar spine + hero + category cards + rich topic rows +
+// thread view. Avatars are generated (initials + brand-family color). Read-only (C1).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Category accent colors (muted, functional — see FORUM-UI-PLAN).
+const CAT_COLOR = {
+  help:     "#0e7c66",
+  requests: "#c77a1a",
+  ideas:    "#3b5bdb",
+  showcase: "#8a4d9e",
+  announce: "#1a2230",
+};
+const CAT_BLURB = {
+  help:     "Using the AI, troubleshooting, how-tos.",
+  requests: "Pages the AI should be able to answer from.",
+  ideas:    "Feature ideas and product direction.",
+  showcase: "Interesting answers and ways people use it.",
+  announce: "Updates from the team.",
+};
+
+// Deterministic avatar color from a name, drawn from a calm brand-family palette.
+const AVA_PALETTE = ["#0e7c66", "#3b5bdb", "#8a4d9e", "#c77a1a", "#2f6f8f", "#5a6573"];
+function avatarColor(name) {
+  const s = String(name || "?");
+  let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return AVA_PALETTE[h % AVA_PALETTE.length];
+}
+function initials(name) {
+  const s = String(name || "?").trim();
+  if (!s) return "?";
+  const parts = s.split(/[\s_]+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+function Avatar({ name, size = 32 }) {
+  return (
+    <span className="idk-ava" style={{ width: size, height: size, background: avatarColor(name), fontSize: size * 0.4 }}>
+      {initials(name)}
+    </span>
+  );
+}
+function RoleBadge({ role }) {
+  if (role === "admin") return <span className="idk-role idk-role-admin"><ShieldCheck size={11} /> admin</span>;
+  if (role === "mod")   return <span className="idk-role idk-role-mod"><ShieldCheck size={11} /> mod</span>;
+  return null;
+}
+
+function dateOnly(ms) {
+  if (!ms) return "";
+  try { return new Date(ms).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }); }
+  catch { return ""; }
+}
+function fullDateTime(ms) {
+  if (!ms) return "";
+  try {
+    return new Date(ms).toLocaleString(undefined, {
+      year: "numeric", month: "long", day: "numeric",
+      hour: "numeric", minute: "2-digit",
+    });
+  } catch { return ""; }
+}
+function relTime(ms) {
+  if (!ms) return "";
+  const diff = Date.now() - ms;
+  const m = 60000, h = 3600000, d = 86400000;
+  if (diff < m) return "just now";
+  if (diff < h) return Math.floor(diff / m) + "m";
+  if (diff < d) return Math.floor(diff / h) + "h";
+  if (diff < 30 * d) return Math.floor(diff / d) + "d";
+  try { return new Date(ms).toLocaleDateString(undefined, { month: "short", year: "numeric" }); } catch { return ""; }
+}
+
+function ForumView({
+  isAdmin, live, categories, posts, loading, activeCat, thread,
+  onClose, onSelectCat, onOpenThread, onBackToList,
+}) {
+  const catName = (id) => (categories.find(c => c.id === id) || {}).name || id;
+  const roleOf = (author) => {
+    // Owner shows as admin (we only know username equality client-side via isAdmin on own posts;
+    // for now mark the known admin username). This is cosmetic; real roles come in C4.
+    return author === "waelalebrahim" ? "admin" : "member";
+  };
+
+  return (
+    <div className="idk-forumx">
+      {/* Top bar */}
+      <div className="idk-fx-top">
+        <button className="idk-kbbtn" onClick={onClose}><CornerDownLeft size={15} /> Back to the AI</button>
+        {isAdmin && !live && <span className="idk-fx-flag">Preview · hidden from public</span>}
+      </div>
+
+      <div className="idk-fx-shell">
+        {/* LEFT SIDEBAR SPINE */}
+        <aside className="idk-fx-side">
+          <div className="idk-fx-brand">
+            <svg width="26" height="26" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M10 3 L30 3 A7 7 0 0 1 37 10 L37 30 A7 7 0 0 1 30 37 L24 37 M16 37 L10 37 A7 7 0 0 1 3 30 L3 10 A7 7 0 0 1 10 3" fill="none" stroke="#0e7c66" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+              <path d="M20 10 V22 M20 27 V30" stroke="#0e7c66" strokeWidth="4" strokeLinecap="round" />
+            </svg>
+            <span>Community</span>
+          </div>
+
+          <nav className="idk-fx-nav">
+            <button className={"idk-fx-link" + (activeCat === null && !thread ? " on" : "")} onClick={() => onSelectCat(null)}>All topics</button>
+          </nav>
+
+          <div className="idk-fx-navsec">Categories</div>
+          <nav className="idk-fx-nav">
+            {categories.map(c => (
+              <button key={c.id} className={"idk-fx-link" + (activeCat === c.id ? " on" : "")} onClick={() => onSelectCat(c.id)}>
+                <span className="idk-fx-dot" style={{ background: CAT_COLOR[c.id] || "#6b7686" }} />
+                {c.name}
+              </button>
+            ))}
+          </nav>
+
+          <div className="idk-fx-navsec">About</div>
+          <nav className="idk-fx-nav">
+            <a className="idk-fx-link" href={GITHUB_URL} target="_blank" rel="noreferrer"><Github size={14} /> Open source</a>
+          </nav>
+        </aside>
+
+        {/* MAIN COLUMN */}
+        <main className="idk-fx-main">
+          {!thread ? (
+            <>
+              {/* Hero */}
+              <div className="idk-fx-hero">
+                <h1>Community</h1>
+                <p>Ask questions, request sources, share what you find, and help shape an AI that refuses to guess.</p>
+              </div>
+
+              {/* Category cards — only on "All" view */}
+              {activeCat === null && (
+                <div className="idk-fx-cards">
+                  {categories.map(c => (
+                    <button key={c.id} className="idk-fx-card" onClick={() => onSelectCat(c.id)}>
+                      <span className="idk-fx-cardbar" style={{ background: CAT_COLOR[c.id] || "#6b7686" }} />
+                      <span className="idk-fx-cardname">{c.name}</span>
+                      <span className="idk-fx-cardblurb">{CAT_BLURB[c.id] || ""}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Category header on a filtered view */}
+              {activeCat && (
+                <div className="idk-fx-cathead">
+                  <span className="idk-fx-cathead-bar" style={{ background: CAT_COLOR[activeCat] || "#6b7686" }} />
+                  <div>
+                    <h2 className="idk-fx-cathead-name">{catName(activeCat)}</h2>
+                    <p className="idk-fx-cathead-blurb">{CAT_BLURB[activeCat] || ""} · {posts.length} {posts.length === 1 ? "topic" : "topics"}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Topic list */}
+              <div className="idk-fx-listhead">
+                <span className="idk-fx-lh-topic">{activeCat ? "Topics" : "Latest topics"}</span>
+                <span className="idk-fx-lh-col">Replies</span>
+                <span className="idk-fx-lh-col">Views</span>
+                <span className="idk-fx-lh-col">Activity</span>
+              </div>
+
+              {loading
+                ? <div className="idk-fx-empty">Loading…</div>
+                : posts.length === 0
+                  ? <div className="idk-fx-empty">No topics here yet. {isAdmin ? "Be the first to start one." : "Check back soon."}</div>
+                  : <div className="idk-fx-rows">
+                      {posts.map(po => (
+                        <div className="idk-fx-row" key={po.id} onClick={() => onOpenThread(po.id)}>
+                          <div className="idk-fx-rowmain">
+                            <div className="idk-fx-rowtitle">
+                              {po.pinned ? <span className="idk-fx-pin">📌</span> : null}
+                              {po.locked ? <span className="idk-fx-lock">🔒</span> : null}
+                              {po.title}
+                            </div>
+                            <div className="idk-fx-rowpills">
+                              <span className="idk-fx-pill" style={{ color: CAT_COLOR[po.category], borderColor: CAT_COLOR[po.category] }}>{catName(po.category)}</span>
+                              <span className="idk-fx-rowauthor"><Avatar name={po.author} size={20} /> {po.author || "someone"}</span>
+                            </div>
+                          </div>
+                          <div className="idk-fx-stat">{po.reply_count}</div>
+                          <div className="idk-fx-stat">{po.views}</div>
+                          <div className="idk-fx-stat idk-fx-act">{relTime(po.last_activity_at || po.created_at)}</div>
+                        </div>
+                      ))}
+                    </div>}
+            </>
+          ) : (
+            /* THREAD VIEW */
+            <div className="idk-fx-thread">
+              <button className="idk-fx-back" onClick={onBackToList}><CornerDownLeft size={14} /> All topics</button>
+              <div className="idk-fx-threadpills">
+                <span className="idk-fx-pill" style={{ color: CAT_COLOR[thread.post.category], borderColor: CAT_COLOR[thread.post.category] }}>{catName(thread.post.category)}</span>
+              </div>
+              <h1 className="idk-fx-threadtitle">{thread.post.pinned ? "📌 " : ""}{thread.post.locked ? "🔒 " : ""}{thread.post.title}</h1>
+              <div className="idk-fx-threadgrid">
+               <div className="idk-fx-threadcol">
+
+              <div className="idk-fx-post">
+                <Avatar name={thread.post.author} size={44} />
+                <div className="idk-fx-postbody">
+                  <div className="idk-fx-posthead">
+                    <span className="idk-fx-postauthor">{thread.post.author || "someone"}</span>
+                    <RoleBadge role={roleOf(thread.post.author)} />
+                    <span className="idk-fx-postdate">{fullDateTime(thread.post.created_at)}</span>
+                  </div>
+                  <div className="idk-fx-posttext">{thread.post.body}</div>
+                </div>
+              </div>
+
+              <div className="idk-fx-replyhead">{thread.replies.length} {thread.replies.length === 1 ? "reply" : "replies"}</div>
+              {thread.replies.map(rp => (
+                <div className="idk-fx-post idk-fx-replypost" key={rp.id}>
+                  <Avatar name={rp.author} size={36} />
+                  <div className="idk-fx-postbody">
+                    <div className="idk-fx-posthead">
+                      <span className="idk-fx-postauthor">{rp.author || "someone"}</span>
+                      <RoleBadge role={roleOf(rp.author)} />
+                      <span className="idk-fx-postdate">{fullDateTime(rp.created_at)}</span>
+                    </div>
+                    <div className="idk-fx-posttext">{rp.body}</div>
+                  </div>
+                </div>
+              ))}
+              {thread.replies.length === 0 && <div className="idk-fx-empty">No replies yet.</div>}
+               </div>
+               <aside className="idk-fx-meta">
+                 <div className="idk-fx-meta-row"><span>Created</span><b>{dateOnly(thread.post.created_at)}</b></div>
+                 <div className="idk-fx-meta-row"><span>Replies</span><b>{thread.post.reply_count}</b></div>
+                 <div className="idk-fx-meta-row"><span>Views</span><b>{thread.post.views}</b></div>
+                 <div className="idk-fx-meta-row"><span>Category</span><b style={{ color: CAT_COLOR[thread.post.category] }}>{catName(thread.post.category)}</b></div>
+               </aside>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [sources, setSources] = useState([]);
   const [sourcesLoading, setSourcesLoading] = useState(true);
@@ -568,10 +908,53 @@ export default function App() {
   const [logEntries, setLogEntries] = useState([]);
   const [logLoading, setLogLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // mobile nav panel
+  // Community Tier 2 (forum) — hidden behind flag; admin can see while off.
+  const [forumOpen, setForumOpen] = useState(false);
+  const [forumAvailable, setForumAvailable] = useState(false); // is it visible to me?
+  const [forumPosts, setForumPosts] = useState([]);
+  const [forumCats, setForumCats] = useState([]);
+  const [forumCat, setForumCat] = useState(null);     // active category filter
+  const [forumLoading, setForumLoading] = useState(false);
+  const [forumIsAdmin, setForumIsAdmin] = useState(false);
+  const [forumThread, setForumThread] = useState(null); // {post, replies} when viewing a thread
+
+  // ---- Lightweight URL routing (so refresh/back/forward and shareable links work) ----
+  const navTo = (path) => { try { if (window.location.pathname !== path) window.history.pushState({}, "", path); } catch {} };
+  const goHome = (push = true) => { setForumOpen(false); setForumThread(null); setLogOpen(false); if (push) navTo("/"); };
+
+  // Apply a path to the view state (used on load + back/forward). push=false (URL already set).
+  const applyRoute = (path) => {
+    if (path.startsWith("/community/t/")) {
+      const id = path.slice("/community/t/".length);
+      setForumOpen(true); setLogOpen(false);
+      if (forumCats.length === 0) loadForum(null);
+      if (id) openThread(id, false);
+    } else if (path.startsWith("/community/c/")) {
+      const c = path.slice("/community/c/".length);
+      setForumOpen(true); setLogOpen(false); setForumThread(null);
+      setForumCat(c || null); loadForum(c || null);
+    } else if (path === "/community") {
+      openForum(false);
+    } else if (path === "/changelog") {
+      openChangelog(false);
+    } else {
+      setForumOpen(false); setForumThread(null); setLogOpen(false);
+    }
+  };
+
+  // On first load: if the URL points at a view, restore it (once forum availability known).
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path !== "/" ) applyRoute(path);
+    const onPop = () => applyRoute(window.location.pathname);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const convRef = useRef(null);
   const safeParse = (x) => { try { return JSON.parse(x); } catch { return {}; } };
-  const openChangelog = async () => {
-    setLogOpen(true); setLogLoading(true);
+  const openChangelog = async (push = true) => {
+    setLogOpen(true); setForumOpen(false); setLogLoading(true); if (push) navTo("/changelog");
     try {
       const r = await fetch("/api/changelog");
       const d = await r.json();
@@ -584,6 +967,44 @@ export default function App() {
     try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }); }
     catch { return ""; }
   };
+
+  // On load, quietly check whether the community is visible to this user (flag on, or admin).
+  useEffect(() => {
+    fetch("/api/forum/list")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && d.posts) { setForumAvailable(true); setForumIsAdmin(!!d.isAdmin); } })
+      .catch(() => {});
+  }, [user]);
+
+  const loadForum = async (cat) => {
+    setForumLoading(true); setForumThread(null);
+    try {
+      const q = cat ? `?category=${encodeURIComponent(cat)}` : "";
+      const r = await fetch("/api/forum/list" + q);
+      const d = await r.json();
+      if (d.posts) {
+        setForumPosts(d.posts); setForumCats(d.categories || []);
+        setForumIsAdmin(!!d.isAdmin); setForumAvailable(true);
+      }
+    } catch {} finally { setForumLoading(false); }
+  };
+  const openForum = (push = true) => { setForumOpen(true); setLogOpen(false); setForumCat(null); loadForum(null); if (push) navTo("/community"); };
+  const openThread = async (id, push = true) => {
+    try {
+      const r = await fetch("/api/forum/get", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const d = await r.json();
+      if (d.post) { setForumThread({ post: d.post, replies: d.replies || [] }); if (push) navTo("/community/t/" + id); }
+    } catch {}
+  };
+  const fmtWhen = (ms) => {
+    if (!ms) return "";
+    try { return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
+    catch { return ""; }
+  };
+  const catName = (id) => (forumCats.find(c => c.id === id) || {}).name || id;
 
   // Sharing: native share sheet on mobile; a platform menu on desktop.
   const [copied, setCopied] = useState(false);
@@ -724,7 +1145,7 @@ export default function App() {
   };
 
   // Start a fresh conversation.
-  const newConversation = () => { setTurns([]); setConvoId(null); setHistOpen(false); };
+  const newConversation = () => { setTurns([]); setConvoId(null); setHistOpen(false); goHome(); };
 
   const deleteConversation = async (id) => {
     try {
@@ -955,6 +1376,7 @@ export default function App() {
               <a className="idk-menu-link" href="/terms.html" onClick={() => setMenuOpen(false)}>Terms</a>
               <a className="idk-menu-link" href="/disclaimer.html" onClick={() => setMenuOpen(false)}>Disclaimer</a>
               <a className="idk-menu-link" onClick={() => { openChangelog(); setMenuOpen(false); }} style={{ cursor: "pointer" }}>What&rsquo;s new</a>
+              {forumAvailable && <a className="idk-menu-link" onClick={() => { openForum(); setMenuOpen(false); }} style={{ cursor: "pointer" }}>Community{forumIsAdmin ? " (preview)" : ""}</a>}
               <a className="idk-menu-link" onClick={() => { shareSite(); setMenuOpen(false); }} style={{ cursor: "pointer" }}>Share this project</a>
               <div className="idk-menu-div" />
               <div className="idk-menu-social">
@@ -992,6 +1414,7 @@ export default function App() {
           <a href="/terms.html">Terms</a><span>·</span>
           <a href="/disclaimer.html">Disclaimer</a><span>·</span>
           <a onClick={openChangelog} style={{ cursor: "pointer" }}>What&rsquo;s new</a>
+          {forumAvailable && <><span>·</span><a onClick={openForum} style={{ cursor: "pointer" }}>Community{forumIsAdmin ? " (preview)" : ""}</a></>}
         </div>
         <div className="idk-social">
           <a href={X_URL} target="_blank" rel="noreferrer" aria-label="X">
@@ -1006,11 +1429,27 @@ export default function App() {
       {authOpen && <AuthDrawer onClose={() => setAuthOpen(false)} onAuthed={(u) => { setUser(u); setAuthOpen(false); }} />}
       {shareData && <ShareMenu url={shareData.url} text={shareData.text} copied={copied} onCopy={copyShareLink} onClose={() => setShareData(null)} />}
 
+      {forumOpen && (
+        <ForumView
+          isAdmin={forumIsAdmin}
+          live={false}
+          categories={forumCats.length ? forumCats : []}
+          posts={forumPosts}
+          loading={forumLoading}
+          activeCat={forumCat}
+          thread={forumThread}
+          onClose={() => goHome()}
+          onSelectCat={(c) => { setForumCat(c); setForumThread(null); loadForum(c); navTo(c ? "/community/c/" + c : "/community"); }}
+          onOpenThread={openThread}
+          onBackToList={() => { setForumThread(null); navTo(forumCat ? "/community/c/" + forumCat : "/community"); }}
+        />
+      )}
+
       {logOpen && (
         <div className="idk-log">
           <div className="idk-log-inner">
             <div className="idk-log-head">
-              <button className="idk-kbbtn" onClick={() => setLogOpen(false)}><CornerDownLeft size={15} /> Back</button>
+              <button className="idk-kbbtn" onClick={() => goHome()}><CornerDownLeft size={15} /> Back</button>
             </div>
             <h2 className="idk-log-title">What&rsquo;s new</h2>
             <p className="idk-log-sub">Every change we ship, pulled live from our public code history. Built in the open.</p>
