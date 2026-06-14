@@ -324,14 +324,21 @@ async function askEngine(question, docs) {
   return { confidence: conf, answer, sources: finalSources.map(d => d.id), conflict, conflict_note };
 }
 
-// Community (Gap Board). NOTE: window.storage is a preview convenience; in this
-// deploy it will quietly no-op, so the board is per-session until you wire a
-// backend endpoint. The calls fail closed and never crash the app.
-const BOARD_KEY = "idk_community_board_v1", VOTED_KEY = "idk_community_voted_v1";
-async function loadBoard() { try { const r = await window.storage.get(BOARD_KEY, true); const a = r && r.value ? JSON.parse(r.value) : []; return Array.isArray(a) ? a : []; } catch { return []; } }
-async function saveBoard(b) { try { await window.storage.set(BOARD_KEY, JSON.stringify(b), true); } catch {} }
-async function loadVoted() { try { const r = await window.storage.get(VOTED_KEY, false); const a = r && r.value ? JSON.parse(r.value) : []; return Array.isArray(a) ? a : []; } catch { return []; } }
-async function saveVoted(ids) { try { await window.storage.set(VOTED_KEY, JSON.stringify(ids), false); } catch {} }
+// Community (Gap Board) — now persisted in the database via /api/community/*.
+// Votes-cast are tracked locally (localStorage) so the same browser shows "voted".
+const VOTED_KEY = "idk_community_voted_v1";
+// Board now persists in the database via /api/community/*. Votes-cast are tracked
+// locally (so the same browser doesn't show "vote" again) — lightweight + fine.
+async function loadBoard() {
+  try { const r = await fetch("/api/community/list"); const d = await r.json(); return Array.isArray(d.board) ? d.board : []; }
+  catch { return []; }
+}
+function loadVotedLocal() {
+  try { const a = JSON.parse(localStorage.getItem(VOTED_KEY) || "[]"); return Array.isArray(a) ? a : []; } catch { return []; }
+}
+function saveVotedLocal(ids) {
+  try { localStorage.setItem(VOTED_KEY, JSON.stringify(ids)); } catch {}
+}
 const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const timeAgo = (ts) => { const s = Math.floor((Date.now() - ts) / 1000); if (s < 60) return "just now"; if (s < 3600) return Math.floor(s / 60) + "m ago"; if (s < 86400) return Math.floor(s / 3600) + "h ago"; return Math.floor(s / 86400) + "d ago"; };
 
@@ -751,7 +758,7 @@ export default function App() {
   const taRef = useRef(null);
 
   useEffect(() => { if (convRef.current) convRef.current.scrollTop = convRef.current.scrollHeight; }, [turns, busy]);
-  useEffect(() => { (async () => { setCommLoading(true); const [b, v] = await Promise.all([loadBoard(), loadVoted()]); setBoard(b); setVoted(new Set(v)); setCommLoading(false); })(); }, []);
+  useEffect(() => { (async () => { setCommLoading(true); const b = await loadBoard(); const v = loadVotedLocal(); setBoard(b); setVoted(new Set(v)); setCommLoading(false); })(); }, []);
 
   const markTurn = (idx, patch) => setTurns(prev => prev.map((t, i) => (i === idx ? { ...t, ...patch } : t)));
 
@@ -870,22 +877,37 @@ export default function App() {
   const reportGap = async (idx) => {
     const turn = turns[idx]; if (!turn || turn.reported) return;
     const text = sanitize(turn.question || "", 280, true); if (!text) return;
-    const fresh = await loadBoard(); const norm = text.toLowerCase();
-    const existing = fresh.find(i => i.type === "gap" && i.text.toLowerCase() === norm);
-    let next; if (existing) { existing.votes += 1; next = fresh; } else { next = [{ id: newId("g"), type: "gap", text, answer: "", votes: 1, createdAt: Date.now() }, ...fresh]; }
-    await saveBoard(next); setBoard(next); markTurn(idx, { reported: true });
+    markTurn(idx, { reported: true });
+    try {
+      await fetch("/api/community/add", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "gap", text, answer: "" }),
+      });
+      setBoard(await loadBoard());
+    } catch {}
   };
   const flagAnswer = async (idx) => {
     const turn = turns[idx]; if (!turn || turn.flagged) return;
     const text = sanitize(turn.question || "", 280, true); const answer = sanitize(turn.answer || "", 180, true); if (!text) return;
-    const fresh = await loadBoard(); const next = [{ id: newId("f"), type: "flag", text, answer, votes: 1, createdAt: Date.now() }, ...fresh];
-    await saveBoard(next); setBoard(next); markTurn(idx, { flagged: true });
+    markTurn(idx, { flagged: true });
+    try {
+      await fetch("/api/community/add", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "flag", text, answer }),
+      });
+      setBoard(await loadBoard());
+    } catch {}
   };
   const upvote = async (id) => {
     if (voted.has(id)) return;
-    const fresh = await loadBoard(); const item = fresh.find(i => i.id === id); if (!item) return;
-    item.votes += 1; await saveBoard(fresh); setBoard(fresh);
-    const nv = new Set(voted); nv.add(id); setVoted(nv); await saveVoted([...nv]);
+    const nv = new Set(voted); nv.add(id); setVoted(nv); saveVotedLocal([...nv]);
+    try {
+      await fetch("/api/community/vote", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      setBoard(await loadBoard());
+    } catch {}
   };
 
   return (
