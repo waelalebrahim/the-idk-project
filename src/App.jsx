@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, BookOpen, Plus, Trash2, X, CornerDownLeft, ShieldCheck, Github, Users, Flag, ArrowUp, Link as LinkIcon, Linkedin, User as UserIcon, Menu } from "lucide-react";
+import { Send, BookOpen, Plus, Trash2, X, CornerDownLeft, ShieldCheck, Github, Users, Flag, ArrowUp, Link as LinkIcon, Linkedin, User as UserIcon, Menu, Share2, Check } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The I Don't Know Project — deploy build (live link-sourcing)
@@ -171,6 +171,14 @@ const STYLE = `
 .idk-menu-social a:hover{color:var(--ink);}
 
 @media (max-width:760px){ .idk-legal, .idk-social{display:none;} }
+
+.idk-share-site{display:inline-flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--high-soft);color:var(--high);border:1px solid var(--high);padding:10px 16px;border-radius:9px;cursor:pointer;transition:background .15s;}
+.idk-share-site:hover{background:#d9f3ec;}
+
+.idk-sharemenu{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;max-width:92vw;background:var(--surface);border:1px solid var(--line);border-radius:16px;z-index:70;box-shadow:0 20px 60px rgba(20,30,50,.25);overflow:hidden;}
+.idk-share-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px;}
+.idk-share-opt{display:flex;align-items:center;justify-content:center;text-align:center;padding:13px 10px;border-radius:10px;background:var(--paper);border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);text-decoration:none;cursor:pointer;transition:border-color .15s,background .15s;}
+.idk-share-opt:hover{border-color:var(--ink);background:var(--surface);}
 `;
 
 // Starter sources — REPLACE with links you own or are allowed to use.
@@ -327,7 +335,7 @@ async function saveVoted(ids) { try { await window.storage.set(VOTED_KEY, JSON.s
 const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const timeAgo = (ts) => { const s = Math.floor((Date.now() - ts) / 1000); if (s < 60) return "just now"; if (s < 3600) return Math.floor(s / 60) + "m ago"; if (s < 86400) return Math.floor(s / 3600) + "h ago"; return Math.floor(s / 86400) + "d ago"; };
 
-function AnswerCard({ turn, idx, onReportGap, onFlag }) {
+function AnswerCard({ turn, idx, onReportGap, onFlag, onShare }) {
   const t = TIER[turn.confidence] || TIER.low;
   const docsAtAsk = turn.docsAtAsk || [];
   const srcDocs = (turn.sources || []).map(id => docsAtAsk.find(d => d.id === id)).filter(Boolean);
@@ -351,6 +359,7 @@ function AnswerCard({ turn, idx, onReportGap, onFlag }) {
         {isLow
           ? <button className="gap-cta" disabled={turn.reported} onClick={() => onReportGap(idx)}><Plus size={12} /> {turn.reported ? "Gap reported — thanks" : "This should have an answer? Report the gap"}</button>
           : <button disabled={turn.flagged} onClick={() => onFlag(idx)}><Flag size={12} /> {turn.flagged ? "Flagged for review" : "Flag this answer"}</button>}
+        {!isLow && onShare && <button onClick={() => onShare(turn)}><Share2 size={12} /> Share</button>}
       </div>
     </div>
   );
@@ -496,6 +505,40 @@ function AuthDrawer({ onClose, onAuthed }) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ShareMenu — desktop platform picker. Mobile uses the native share sheet instead.
+// ─────────────────────────────────────────────────────────────────────────────
+function ShareMenu({ url, text, onClose, onCopy, copied }) {
+  const u = encodeURIComponent(url);
+  const t = encodeURIComponent(text);
+  const targets = [
+    { name: "Hacker News", href: `https://news.ycombinator.com/submitlink?u=${u}&t=${t}` },
+    { name: "X", href: `https://twitter.com/intent/tweet?url=${u}&text=${t}` },
+    { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}` },
+    { name: "Reddit", href: `https://www.reddit.com/submit?url=${u}&title=${t}` },
+    { name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${t}%20${u}` },
+    { name: "Telegram", href: `https://t.me/share/url?url=${u}&text=${t}` },
+    { name: "Bluesky", href: `https://bsky.app/intent/compose?text=${t}%20${u}` },
+    { name: "Email", href: `mailto:?subject=${encodeURIComponent("The I Don't Know Project")}&body=${t}%20${u}` },
+  ];
+  return (
+    <>
+      <div className="idk-scrim" onClick={onClose} />
+      <div className="idk-sharemenu" role="dialog" aria-modal="true">
+        <div className="idk-menu-head"><span>Share</span>
+          <button className="idk-iconbtn" onClick={onClose} aria-label="Close"><X size={18} /></button>
+        </div>
+        <div className="idk-share-grid">
+          {targets.map(tg => (
+            <a key={tg.name} className="idk-share-opt" href={tg.href} target="_blank" rel="noreferrer" onClick={onClose}>{tg.name}</a>
+          ))}
+          <button className="idk-share-opt" onClick={() => onCopy(url)}>{copied ? "Link copied!" : "Copy link"}</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function App() {
   const [sources, setSources] = useState([]);
   const [sourcesLoading, setSourcesLoading] = useState(true);
@@ -533,6 +576,49 @@ export default function App() {
     if (!iso) return "";
     try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }); }
     catch { return ""; }
+  };
+
+  // Sharing: native share sheet on mobile; a platform menu on desktop.
+  const [copied, setCopied] = useState(false);
+  const [shareData, setShareData] = useState(null); // { url, text } when desktop menu open
+  const SITE_URL = "https://i-dont-know-project.pages.dev/";
+  const SITE_SHARE_TEXT = "The I Don't Know Project \u2014 an AI that answers only from real sources, cites them, and says \u201cI don't know\u201d instead of making things up.";
+
+  const startShare = async (url, text) => {
+    if (navigator.share) {
+      try { await navigator.share({ title: "The I Don't Know Project", text, url }); return; } catch {}
+    }
+    setShareData({ url, text }); // desktop: open the platform menu
+  };
+  const shareSite = () => startShare(SITE_URL, SITE_SHARE_TEXT);
+
+  // Share an answer: save it (public), then share the /shared link.
+  const shareAnswer = async (turn) => {
+    try {
+      const chips = (turn.sources || [])
+        .map(id => (turn.docsAtAsk || []).find(d => d.id === id))
+        .filter(Boolean)
+        .map(d => ({ title: d.title, url: d.url, date: d.date }));
+      const r = await fetch("/api/share/create", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          question: turn.question || "",
+          answer: turn.answer || "",
+          confidence: turn.confidence || "low",
+          chips,
+        }),
+      });
+      const d = await r.json();
+      if (d.ok && d.id) {
+        const shareUrl = `${SITE_URL}shared?id=${d.id}`;
+        const text = `"${(turn.question || "this question").slice(0,120)}" \u2014 answered with sources by The I Don't Know Project`;
+        startShare(shareUrl, text);
+      }
+    } catch {}
+  };
+
+  const copyShareLink = async (url) => {
+    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
   };
   const turnsRef = useRef([]);
   useEffect(() => { turnsRef.current = turns; }, [turns]);
@@ -847,6 +933,7 @@ export default function App() {
               <a className="idk-menu-link" href="/terms.html" onClick={() => setMenuOpen(false)}>Terms</a>
               <a className="idk-menu-link" href="/disclaimer.html" onClick={() => setMenuOpen(false)}>Disclaimer</a>
               <a className="idk-menu-link" onClick={() => { openChangelog(); setMenuOpen(false); }} style={{ cursor: "pointer" }}>What&rsquo;s new</a>
+              <a className="idk-menu-link" onClick={() => { shareSite(); setMenuOpen(false); }} style={{ cursor: "pointer" }}>Share this project</a>
               <div className="idk-menu-div" />
               <div className="idk-menu-social">
                 <a href={X_URL} target="_blank" rel="noreferrer" aria-label="X"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
@@ -863,11 +950,12 @@ export default function App() {
           <div className="idk-empty">
             <h2>Ask anything. Try to break it.</h2>
             <p>It answers using only the links loaded into it, not the open web, not guesswork, and shows you the source behind every answer. If the sources don't cover your question, it says &ldquo;I don't know&rdquo; instead of making something up. You can report those gaps, and the ones people ask for most guide what gets added next.</p>
+            <button className="idk-share-site" onClick={shareSite}>{copied ? <><Check size={15} /> Link copied</> : <><Share2 size={15} /> Share this project</>}</button>
           </div>
         )}
         {turns.map((t, i) => t.role === "q"
           ? <div className="idk-turn idk-q" key={i}><span>{t.text}</span></div>
-          : <div className="idk-turn" key={i}><AnswerCard turn={t} idx={i} onReportGap={reportGap} onFlag={flagAnswer} /></div>)}
+          : <div className="idk-turn" key={i}><AnswerCard turn={t} idx={i} onReportGap={reportGap} onFlag={flagAnswer} onShare={shareAnswer} /></div>)}
         {busy && (<div className="idk-turn"><div className="idk-thinking"><span className="idk-dot" /><span className="idk-dot" /><span className="idk-dot" /> reading the sources</div></div>)}
       </div>
 
@@ -894,6 +982,7 @@ export default function App() {
 
       {commOpen && <CommunityDrawer onClose={() => setCommOpen(false)} board={board} voted={voted} loading={commLoading} onUpvote={upvote} />}
       {authOpen && <AuthDrawer onClose={() => setAuthOpen(false)} onAuthed={(u) => { setUser(u); setAuthOpen(false); }} />}
+      {shareData && <ShareMenu url={shareData.url} text={shareData.text} copied={copied} onCopy={copyShareLink} onClose={() => setShareData(null)} />}
 
       {logOpen && (
         <div className="idk-log">
