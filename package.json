@@ -2,6 +2,14 @@
   "name": "the-idk-project",
   "private": true,
   "version": "1.0.0",
+  "description": "An open-source AI that only answers from sources you trust, cites every claim, and says \"I don't know\" instead of making things up.",
+  "author": "Wael Alebrahim",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/waelalebrahim/the-idk-project"
+  },
+  "homepage": "https://i-dont-know-project.pages.dev",
   "type": "module",
   "scripts": {
     "dev": "vite",
