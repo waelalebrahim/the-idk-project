@@ -2,7 +2,7 @@
 
 # The I Don't Know Project
 
-### An open-source AI that only answers from sources you trust — cites every claim, and says *"I don't know"* instead of making things up.
+### An open-source AI that only answers from sources you trust cites every claim, and says *"I don't know"* instead of making things up.
 
 [**Live demo →**](https://i-dont-know-project.pages.dev) · [Report an issue](https://github.com/waelalebrahim/the-idk-project/issues) · [MIT Licensed](#license)
 
@@ -12,11 +12,11 @@
 
 ## Why this exists
 
-Most AI tools will confidently invent an answer when they don't actually know one. A made-up citation, a plausible-sounding statistic, a function that doesn't exist — delivered with the same confidence as the truth. For anything that matters, that confidence is the problem.
+Most AI tools will confidently invent an answer when they don't actually know one. A made-up citation, a plausible-sounding statistic, a function that doesn't exist delivered with the same confidence as the truth. For anything that matters, that confidence is the problem.
 
 **The I Don't Know Project takes the opposite stance.** It answers *only* from a specific library of sources you give it. Every answer shows the exact source behind it. And when the answer isn't in those sources, it plainly says **"I don't know"** rather than guessing.
 
-It's not trying to know everything. It's trying to be *trustworthy about what it knows* — and honest about what it doesn't.
+It's not trying to know everything. It's trying to be *trustworthy about what it knows* and honest about what it doesn't.
 
 ## What it actually does
 
@@ -31,11 +31,11 @@ It ships with a small demo library so you can see it work immediately. **Point i
 
 ## Use it for whatever you want
 
-This is open source under the MIT license. Deploy it, fork it, rebrand it, build on it — for your own documentation, your own knowledge base, your own community. That's the point. The honesty engine is the gift; what you point it at is up to you.
+This is open source under the MIT license. Deploy it, fork it, rebrand it, build on it for your own documentation, your own knowledge base, your own community. That's the point. The honesty engine is the gift; what you point it at is up to you.
 
 ## Tech stack
 
-A deliberately simple, modern, low-cost stack — easy to read, fork, and self-host.
+A deliberately simple, modern, low-cost stack easy to read, fork, and self-host.
 
 - **Frontend:** React + Vite (single-page app)
 - **Backend:** Cloudflare Pages Functions (serverless)
@@ -82,7 +82,7 @@ The project is built and live. Ongoing work is focused on:
 - Optional retrieval scaling for very large source libraries
 - Streaming responses, without ever weakening the honesty checks
 
-Contributions are welcome — see an opportunity, open an issue or a pull request.
+Contributions are welcome see an opportunity, open an issue or a pull request.
 
 ## License
 
@@ -98,6 +98,6 @@ Released under the **MIT License** — free to use, modify, and distribute, incl
 
 [GitHub](https://github.com/waelalebrahim) · [X](https://x.com/walebrahim_X) · [LinkedIn](https://www.linkedin.com/in/waelalebrahim/)
 
-*An AI you can trust — because it never bluffs, and always shows its sources.*
+*An AI you can trust because it never bluffs, and always shows its sources.*
 
 </div>
